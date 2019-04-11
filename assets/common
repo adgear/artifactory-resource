@@ -54,9 +54,16 @@ is_file_complies_with_artifact_specs() {
     artifact_id=${1}
     version=${2}
     file=${3}
+    qualifier='\w+'
+    forward="${artifact_id}-${version}-${qualifier}"
+    backward="${artifact_id}-${qualifier}-${version}"
+    regex="^(${forward}|${backward})"
 
-    if [[ $file != ${artifact_id}-${version}* ]]; then
-        echo -e "artifact ${RED}${file}${NC} does not comply with artifact source specs (expected ${GREEN}${artifact_id}-${version}[-classifier].packaging${NC})" >&2
+    if grep -qvE "${regex}" <<< "${file}"; then
+        echo -e "artifact ${RED}${file}${NC} does not comply with artifact source specs" >&2
+        echo -e "Supported specs are :" >&2
+        echo -e "  - ${GREEN}${artifact_id}-${version}[-classifier].packaging${NC})" >&2
+        echo -e "  - ${GREEN}${artifact_id}-[classifier-]${version}.packaging${NC})" >&2
         exit 1
     fi
 }
