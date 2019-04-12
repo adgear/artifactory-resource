@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+
+api_key="$(vault read -field api_key secret/concourse/data/artifactory)"
+artifact_id="psid-crossdevices"
+group_id="com.adgear.data"
+host="https://adgear.jfrog.io/adgear"
+repository_id="libs-test-test"
+
+payload="$(jq -n \
+  --arg api_key "${api_key}" \
+  --arg artifact_id "${artifact_id}" \
+  --arg group_id "${group_id}" \
+  --arg host "${host}" \
+  --arg repository_id "${repository_id}" \
+  ' {
+      "source": {
+          "api_key": $api_key,
+          "artifact_id": $artifact_id,
+          "group_id": $group_id,
+          "host": $host,
+          "repository_id": $repository_id
+        },
+      "params": {
+        "path": "_upload"
+      }
+    }
+')"
+
+echo -e "\n===BEGIN PAYLOAD===\n"
+
+jq . <<< "${payload}"
+
+echo -e "\n===END PAYLOAD===\n\n"
+
+DEBUG=1; ./in _download <<< "${payload}"

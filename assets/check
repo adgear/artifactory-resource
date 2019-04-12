@@ -1,6 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -o errexit \
+    -o pipefail
 
-set -e
+if [[ -n ${DEBUG} ]]; then
+  set -o xtrace \
+      -o verbose
+fi
 
 exec 3>&1 # make stdout available as fd 3 for the result
 exec 1>&2 # redirect all output to stderr for logging
@@ -14,11 +19,11 @@ payload=$(mktemp ${TMPDIR}/artifactory-resource-request.XXXXXX)
 
 cat > $payload <&0
 
-api_key=$(jq -r '.source.api_key // ""' < ${payload})
-repository_id=$(jq -r '.source.repository_id // ""' < ${payload})
-group_id=$(jq -r '.source.group_id // ""' < ${payload})
-artifact_id=$(jq -r '.source.artifact_id // ""' < ${payload})
-host=$(jq -r '.source.host // ""' < ${payload})
+api_key="$(jq -r '.source.api_key // ""' < "${payload}")"
+repository_id="$(jq -r '.source.repository_id // ""' < "${payload}")"
+group_id="$(jq -r '.source.group_id // ""' < "${payload}")"
+artifact_id="$(jq -r '.source.artifact_id // ""' < "${payload}")"
+host="$(jq -r '.source.host // ""' < "${payload}")"
 
 is_valid 'api_key' "${api_key}"
 is_valid 'repository_id' "${repository_id}"
@@ -39,19 +44,21 @@ aql="items.find(
 version=$(jq -r '.version.ref // ""' < ${payload})
 
 result=$(curl \
-  -k \
+  "${curl_options[@]}" \
   -X POST \
   -H "X-JFrog-Art-Api:${api_key}" \
   -H "Content-Type:text/plain" \
   -d "${aql}" \
   --write-out "\n%{http_code}" \
   --silent \
-  ${host}/api/search/aql)
+  "${host}/api/search/aql")
 
 http_code="${result##*$'\n'}"
 req_output=$(echo "${result}" | sed '$d')
 if [[ ${http_code} -eq '200' ]]; then
-  sorted_versions="$(sort-versions --json "$(echo "${req_output}" | jq '[.results[].name]')")"
+  log "${req_output}"
+  # sorted_versions="$(sort-versions --json "$(echo "${req_output}" | jq '[.results[].name]')")"
+  sorted_versions="$( jq -r '.results[].name' <<< "${req_output}" | sort -rV | jq --raw-input --slurp '[split("\n") | .[] | select(length > 0)]' )"
   total=$(echo "${req_output}" | jq '.range.total')
   if [[ "${total}" == "0" ]]; then
     echo "[]" >&3
