@@ -44,7 +44,7 @@ folder_exists() {
 get_version() {
     payload=${1}
     destination=${2}
-    version_param=$(jq -r '.params.version // ""' < ${payload})
+    version_param=$(jq -r '.params.version // ""' < "${payload}")
     version_file=${version_param:=${path_param}/version}
 
     if [[ ! -f "${destination}/${version_file}" ]]; then
@@ -75,9 +75,9 @@ is_file_complies_with_artifact_specs() {
     artifact_id=${1}
     version=${2}
     file=${3}
-    qualifier='\w+'
-    forward="${artifact_id}-${version}-${qualifier}"
-    backward="${artifact_id}-${qualifier}-${version}"
+    classifier='\w+'
+    forward="${artifact_id}-${version}-${classifier}"
+    backward="${artifact_id}-${classifier}-${version}"
     regex="^(${forward}|${backward})"
 
     if grep -qvE "${regex}" <<< "${file}"; then
