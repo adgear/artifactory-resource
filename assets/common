@@ -7,10 +7,10 @@ NC='\033[0m'
 CURL_INSECURE="${CURL_INSECURE:=false}"
 CURL_RETRY="${CURL_RETRY:=true}"
 
-curl_options=("--fail")
+curl_options=("--fail" "--location")
 
-if [[ ${CURL_INSECURE} = "true" ]]; then curl_options+=("--insecure"); fi
-if [[ ${CURL_RETRY} = "true" ]]; then
+if [[ ${CURL_INSECURE} == "true" ]]; then curl_options+=("--insecure"); fi
+if [[ ${CURL_RETRY} == "true" ]]; then
   CURL_RETRY_NUM="${CURL_RETRY_NUM:=5}"
   curl_options+=("--retry" "${CURL_RETRY_NUM}")
   curl_options+=("--retry-connrefused")

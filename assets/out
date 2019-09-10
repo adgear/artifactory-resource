@@ -56,7 +56,8 @@ done
 for abs_file in $files; do
   file="$(basename "${abs_file}")"
 
-  sha1="$(sha1sum "${abs_file}" | cut -f 1 -d ' ')"
+  # md5="$(md5sum "${abs_file}" | cut -f 1 -d ' ')"
+  # sha1="$(sha1sum "${abs_file}" | cut -f 1 -d ' ')"
   sha256="$(sha256sum "${abs_file}" | cut -f 1 -d ' ')"
 
   result=$(curl \
@@ -76,14 +77,13 @@ for abs_file in $files; do
       "${curl_options[@]}" \
       -H "X-Checksum-Deploy: true" \
       -H "X-JFrog-Art-Api: ${api_key}" \
-      -H "X-Checksum-Sha1: ${sha1}" \
-      -H "X-Checksum-Sha256: ${sha256}" \
+      -H "X-Checksum: ${sha256}" \
       -T "${abs_file}" \
       --silent \
       "${host}/${repository_id}/${group_id_path}/${artifact_id}/${version}/${file}")
   elif [[ ${http_code} -ne '201' ]]; then
     log "An error occured while trynig to create artifact ${file} by checksum"
-    log "Request: curl ${curl_options[*]} -H 'X-JFrog-Art-Api:*****' -H \"X-Checksum-Sha1:${sha1}\" -H \"X-Checksum-Sha256: ${sha256}\" -T ${abs_file} --silent ${host}/${repository_id}/${group_id_path}/${artifact_id}/${version}/${file}"
+    log "Request: curl ${curl_options[*]} -H 'X-JFrog-Art-Api:*****' -H \"X-Checksum: ${sha256}\" -T ${abs_file} --silent ${host}/${repository_id}/${group_id_path}/${artifact_id}/${version}/${file}"
     log "Error:${req_output}"
     exit 1
   fi

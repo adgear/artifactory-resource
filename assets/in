@@ -93,9 +93,9 @@ if [[ ${http_code} -eq '200' ]]; then
     log "Downloading ${file_name}"
     curl \
       ${curl_options[@]} \
+      --silent \
       -H "X-JFrog-Art-Api:${api_key}" \
       -o "${1}/${file_name}" \
-      --silent \
       "${host}/${repository_id}/$(echo ${req_files} | jq -r ".results[${i}]|\"\(.path)/\(.name)\"")"
   done
 
